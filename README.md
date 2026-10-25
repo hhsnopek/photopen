@@ -35,10 +35,12 @@ notification shade are blocked and the phone cannot be taken out of PhotoPen
 until it is unlocked. The first time you lock, Android shows a short
 confirmation ("App is pinned") — accept it once.
 
-If that confirmation is declined, or the device does not allow pinning, the
-in-app lock still hides the close button, Back and the video controls, but Home
-will work. Nothing an ordinary app can do covers that case; screen pinning is the
-Android mechanism for it.
+If that confirmation is declined, or screen pinning is switched off on the
+device, the in-app lock still hides the close button, Back and the video
+controls, but Home will work. The app notices that and says so, with a shortcut
+to the security settings; after pinning is enabled, locking again pins it. That
+is the Android mechanism for staying inside an app, and an ordinary app cannot
+cover it without it.
 
 To leave a pinned viewer, hold the unlock control for three seconds, or use
 Android's own unpin gesture (swipe up and hold).

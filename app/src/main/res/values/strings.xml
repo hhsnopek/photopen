@@ -21,6 +21,11 @@
 
 
 
+    <string name="pinning_hint_title">Home is still reachable</string>
+    <string name="pinning_hint_body">Android screen pinning is turned off, so the phone can still leave PhotoPen while it is locked. Turn on Screen pinning in Settings → Security, then lock again.</string>
+    <string name="pinning_hint_open">Open settings</string>
+    <string name="pinning_hint_not_now">Not now</string>
+
     <string name="hold_to_lock">Hold to lock</string>
     <string name="hold_to_unlock">Hold to unlock</string>
     <string name="close">Close</string>

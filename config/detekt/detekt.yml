@@ -1,0 +1,173 @@
+# Detekt configuration for PhotoPen
+# See: https://detekt.dev/docs/rules/
+
+build:
+  maxIssues: 0
+  excludeCorrectable: false
+
+config:
+  validation: true
+  # Treat all warnings as errors for strict enforcement
+  warningsAsErrors: true
+
+coroutines:
+  active: true
+  GlobalCoroutineUsage:
+    active: true
+  SuspendFunWithCoroutineScopeReceiver:
+    active: true
+  # Coroutines are scoped to the ViewModel; there is no application-wide scope.
+  InjectDispatcher:
+    active: false
+
+# Compose-specific rules from detekt-compose-rules
+Compose:
+  active: true
+  ComposableNaming:
+    active: true
+  MutableStateAutoboxing:
+    active: true
+  ModifierMissing:
+    active: true
+  ModifierNotUsedAtRoot:
+    active: true
+  ModifierComposableOrdering:
+    active: true
+  RememberMissing:
+    active: true
+  ComposableAnnotationNaming:
+    active: true
+  ReturnsInComposable:
+    active: true
+  ComposableParamOrder:
+    active: true
+  MutableParameters:
+    active: true
+  UnstableCollections:
+    active: true
+  # The theme is a plain MaterialTheme wrapper, not a custom CompositionLocal.
+  CompositionLocalAllowlist:
+    active: false
+  # Dialogs and cards are laid out inside the parent Column; the screens own
+  # their padding rather than every leaf accepting a Modifier.
+  ContentSlotReused:
+    active: false
+  # PhotoPenRoot is the composition owner: it is the one place allowed to
+  # create the library ViewModel. Everything below it takes plain state.
+  ViewModelInjection:
+    active: false
+
+potential-bugs:
+  active: true
+  # MediaStore cursors return nullable strings; a few helpers narrow them by hand.
+  UnsafeCallOnNullableType:
+    active: false
+  UnreachableCatchBlock:
+    active: true
+  UselessPostfixExpression:
+    active: true
+
+performance:
+  active: true
+  SpreadOperator:
+    active: true
+  ForEachOnRange:
+    active: true
+  # The folder and item lists are small; copying them per frame is fine.
+  ArrayPrimitive:
+    active: false
+
+complexity:
+  active: true
+  ComplexCondition:
+    active: true
+    threshold: 6
+  LargeClass:
+    active: true
+    # LibraryViewModel owns the library, the folder choice and the refresh job.
+    threshold: 700
+  LongMethod:
+    active: true
+    # Compose screens are declarative and read as one long function.
+    threshold: 250
+  LongParameterList:
+    active: true
+    functionThreshold: 8
+    constructorThreshold: 9
+    ignoreDefaultParameters: true
+  TooManyFunctions:
+    active: true
+    thresholdInFiles: 55
+    thresholdInClasses: 55
+    thresholdInInterfaces: 25
+    thresholdInObjects: 30
+    thresholdInEnums: 25
+  CyclomaticComplexMethod:
+    active: true
+    # The mime table and the browse dispatcher are long switch-like chains.
+    threshold: 30
+  NestedBlockDepth:
+    active: true
+    # The MediaStore projections and cursor reads are unavoidably verbose.
+    threshold: 6
+
+style:
+  active: true
+  # Ports, timeouts and byte counts read better as literals next to their comment.
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    active: true
+    maxLineLength: 120
+    excludeCommentStatements: true
+  ReturnCount:
+    active: true
+    max: 6
+    excludeGuardClauses: true
+  # Disabled: multiple break/continue in loops is acceptable for parsing code
+  LoopWithTooManyJumpStatements:
+    active: false
+  UnusedPrivateMember:
+    active: true
+    allowedNames: '_.*'
+  UnusedPrivateClass:
+    active: true
+  UnusedParameter:
+    active: true
+    allowedNames: '.*'
+  # Compose callbacks and interface overrides can carry parameters they do not read.
+  UnusedPrivateProperty:
+    active: true
+    allowedNames: '_.*'
+
+empty-blocks:
+  active: true
+  EmptyCatchBlock:
+    active: true
+    allowedExceptionNameRegex: '_|(ignore|expected).*'
+  EmptyFunctionBlock:
+    active: true
+    ignoreOverridden: true
+
+exceptions:
+  active: true
+  TooGenericExceptionCaught:
+    active: true
+    exceptionNames:
+      - ArrayIndexOutOfBoundsException
+      - Error
+      - IllegalMonitorStateException
+      - NullPointerException
+      - IndexOutOfBoundsException
+      - RuntimeException
+      - Throwable
+    allowedExceptionNameRegex: '_|(ignore|expected).*'
+
+naming:
+  active: true
+  # Compose functions are PascalCase by convention; the detekt-compose rules
+  # (Compose:ComposableNaming) enforce that instead.
+  FunctionNaming:
+    active: true
+    ignoreAnnotated:
+      - Composable

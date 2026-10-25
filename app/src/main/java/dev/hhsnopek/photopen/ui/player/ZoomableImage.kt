@@ -8,10 +8,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +48,7 @@ import dev.hhsnopek.photopen.data.MediaItem
 fun ZoomableImage(
     item: MediaItem,
     modifier: Modifier = Modifier,
+    zoomEnabled: Boolean = true,
     onScaleChange: (Float) -> Unit = {},
     onTap: () -> Unit = {},
 ) {
@@ -64,34 +67,55 @@ fun ZoomableImage(
     val scale = zoom.scale
     val offset = zoom.offset
 
+    // Locking drops any zoom that was already applied: pinch and double tap are
+    // gone while locked, so a zoomed-in picture could never be zoomed back out.
+    val latestOnScaleChange = rememberUpdatedState(onScaleChange)
+    LaunchedEffect(zoomEnabled) {
+        if (!zoomEnabled) {
+            zoom.scale = MIN_SCALE
+            zoom.offset = Offset.Zero
+            latestOnScaleChange.value(MIN_SCALE)
+        }
+    }
+
     Box(
         modifier =
             modifier
                 .fillMaxSize()
                 .testTag(ZOOMABLE_TAG)
                 .onSizeChanged { size = it }
-                .pointerInput(item.key) {
-                    detectZoomPanAndDoubleTap(
-                        currentScale = { zoom.scale },
-                        onGesture = { pan, zoomChange ->
-                            val nextScale = clampScale(zoom.scale * zoomChange)
-                            zoom.scale = nextScale
-                            zoom.offset = clampOffset(zoom.offset + pan, nextScale, fitted, size)
-                            onScaleChange(nextScale)
-                        },
-                        onTap = onTap,
-                        onDoubleTap = {
-                            if (zoom.scale > MIN_SCALE) {
-                                zoom.scale = MIN_SCALE
-                                zoom.offset = Offset.Zero
-                            } else {
-                                zoom.scale = DOUBLE_TAP_SCALE
-                                zoom.offset = Offset.Zero
-                            }
-                            onScaleChange(zoom.scale)
-                        },
-                    )
-                },
+                .then(
+                    if (zoomEnabled) {
+                        Modifier.pointerInput(item.key) {
+                            detectZoomPanAndDoubleTap(
+                                currentScale = { zoom.scale },
+                                onGesture = { pan, zoomChange ->
+                                    val nextScale = clampScale(zoom.scale * zoomChange)
+                                    zoom.scale = nextScale
+                                    zoom.offset = clampOffset(zoom.offset + pan, nextScale, fitted, size)
+                                    onScaleChange(nextScale)
+                                },
+                                onTap = onTap,
+                                onDoubleTap = {
+                                    if (zoom.scale > MIN_SCALE) {
+                                        zoom.scale = MIN_SCALE
+                                        zoom.offset = Offset.Zero
+                                    } else {
+                                        zoom.scale = DOUBLE_TAP_SCALE
+                                        zoom.offset = Offset.Zero
+                                    }
+                                    onScaleChange(zoom.scale)
+                                },
+                            )
+                        }
+                    } else {
+                        // Still report taps: the unlock control is hidden while
+                        // locked and a tap has to be able to bring it back.
+                        Modifier.pointerInput(item.key) {
+                            detectTapWithoutConsuming(onTap)
+                        }
+                    },
+                ),
         contentAlignment = Alignment.Center,
     ) {
         Box(

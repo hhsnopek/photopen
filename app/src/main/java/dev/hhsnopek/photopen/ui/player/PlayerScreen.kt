@@ -1,5 +1,7 @@
 package dev.hhsnopek.photopen.ui.player
 
+import android.app.Activity
+import android.app.ActivityManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -66,6 +68,30 @@ fun PlayerScreen(
 
     var locked by rememberSaveable { mutableStateOf(false) }
 
+    // Lock task mode is the only way an ordinary app can stop Home, Recents and
+    // the notification shade. Android asks the user to confirm pinning the first
+    // time; if they decline (or the device forbids it) the in-app lock still
+    // holds, it just cannot cover the system exits.
+    val activity = LocalContext.current.findActivity()
+    LaunchedEffect(locked, activity) {
+        if (activity == null) return@LaunchedEffect
+        runCatching {
+            if (locked) {
+                activity.startLockTask()
+            } else if (activity.isPinned()) {
+                activity.stopLockTask()
+            }
+        }
+    }
+    DisposableEffect(activity) {
+        onDispose {
+            // Never leave the device pinned after the player is gone.
+            if (activity != null && activity.isPinned()) {
+                runCatching { activity.stopLockTask() }
+            }
+        }
+    }
+
     // While locked the unlock control gets out of the way: it lingers for a
     // moment after locking, fades out, and comes back on a tap. Taps do not
     // reveal the rest of the chrome, and a tap cannot unlock: only the hold can.
@@ -119,7 +145,11 @@ fun PlayerScreen(
                     VideoPoster(item = item)
                 }
             } else {
-                ZoomableImage(item = item, onTap = { if (locked) revealRequest++ })
+                ZoomableImage(
+                    item = item,
+                    zoomEnabled = !locked,
+                    onTap = { if (locked) revealRequest++ },
+                )
             }
         }
         if (!locked) {
@@ -147,6 +177,9 @@ fun PlayerScreen(
         }
     }
 }
+
+private fun Activity.isPinned(): Boolean =
+    getSystemService(ActivityManager::class.java)?.lockTaskModeState != ActivityManager.LOCK_TASK_MODE_NONE
 
 /**
  * A locked viewer is meant to be looked at, not to sleep after thirty seconds.

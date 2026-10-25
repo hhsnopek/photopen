@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
@@ -11,6 +12,7 @@ import androidx.compose.ui.test.pinch
 import androidx.compose.ui.unit.dp
 import dev.hhsnopek.photopen.data.MediaItem
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -56,6 +58,35 @@ class ZoomableImageTest {
         // 100px -> 400px is a 4x spread; the clamp allows it, so the reported
         // scale must be near 4 (not 1, and not the 5x ceiling).
         assertEquals(4f, scale, 0.3f)
+    }
+
+    @Test
+    fun zoomGesturesDoNothingWhenTheViewerIsLocked() {
+        val reported = mutableListOf<Float>()
+        composeRule.setContent {
+            Box(modifier = Modifier.size(width = 400.dp, height = 800.dp)) {
+                ZoomableImage(
+                    item = landscape,
+                    zoomEnabled = false,
+                    onScaleChange = { reported += it },
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag(ZOOMABLE_TAG).performTouchInput {
+            pinch(
+                start0 = center + Offset(-50f, 0f),
+                start1 = center + Offset(50f, 0f),
+                end0 = center + Offset(-200f, 0f),
+                end1 = center + Offset(200f, 0f),
+            )
+        }
+        composeRule.onNodeWithTag(ZOOMABLE_TAG).performTouchInput { doubleClick(center) }
+        composeRule.waitForIdle()
+
+        // The only report allowed is the reset-to-fit that locking performs;
+        // a pinch or double tap must never produce a scale above 1.
+        assertTrue("the locked viewer must not zoom", reported.all { it <= MIN_SCALE + 0.001f })
     }
 
     @Test

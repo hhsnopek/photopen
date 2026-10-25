@@ -15,11 +15,11 @@ device.
 - A folder picker narrows the view to one folder (Camera, Movies, an album you
   copied over). The choice is remembered the next time the app opens.
 - Full-screen viewer: swipe between items, pinch to zoom, videos play on their
-  own.
+  own. Zoom is available until the viewer is locked.
 - Hold the lock control for three seconds to lock. While locked the close button
-  and video controls disappear, leaving only swiping, zooming and playback. The
-  unlock control fades out; tap the screen to bring it back, then hold it for
-  three seconds to unlock.
+  and video controls disappear and zoom is switched off: all that is left is
+  swiping and playback. The unlock control fades out; tap the screen to bring it
+  back, then hold it for three seconds to unlock.
 
 ## Using it
 
@@ -30,11 +30,18 @@ device.
 
 ## What "locked" really means
 
-The lock is inside the app. It hides the app's own exits: the close button, the
-system Back action, and the video transport controls. Home, Recents and the
-notification shade still work, because Android only lets a kiosk or device-owner
-app block those. For a determined toddler, also turn on Android's screen pinning
-(Settings → Security → Screen pinning) before handing the phone over.
+Locking also pins the app with Android's lock task mode, so Home, Recents and the
+notification shade are blocked and the phone cannot be taken out of PhotoPen
+until it is unlocked. The first time you lock, Android shows a short
+confirmation ("App is pinned") — accept it once.
+
+If that confirmation is declined, or the device does not allow pinning, the
+in-app lock still hides the close button, Back and the video controls, but Home
+will work. Nothing an ordinary app can do covers that case; screen pinning is the
+Android mechanism for it.
+
+To leave a pinned viewer, hold the unlock control for three seconds, or use
+Android's own unpin gesture (swipe up and hold).
 
 ## Install
 
@@ -75,14 +82,15 @@ secrets, and a local build reads the passwords from the environment or from
 `KEYSTORE_PASSWORD=... KEY_PASSWORD=... make keystore` creates one. Back the keystore up: losing it means no future release can update
 an installed copy.
 
-Tests: 9 JVM tests and 11 instrumented tests (zoom, lock hold, folder picker,
-folder grouping). The instrumented ones cover what unit tests cannot: real
-Compose gestures, real MediaStore rows and a real screen.
+Tests: 9 JVM tests and 12 instrumented tests (zoom, zoom-disabled locking, lock
+hold, folder picker, folder grouping). The instrumented ones cover what unit
+tests cannot: real Compose gestures, real MediaStore rows and a real screen.
 
 ## Limits
 
-- The lock is app-level, as described above. Screen pinning closes the rest of
-  the gap.
+- Keeping the phone inside the app relies on Android's lock task mode, which
+  needs the one-time pinning confirmation. Declining it leaves the in-app lock
+  only.
 - Folders come from Android's media index. A folder the system has not indexed
   yet will not appear until it does.
 - Two folders with the same name on different volumes appear as separate

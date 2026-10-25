@@ -34,8 +34,8 @@ android {
         // than by raising the floor.
         minSdk = 26
         targetSdk = 35
-        versionCode = 10000
-        versionName = "1.0.0"
+        versionCode = 11000
+        versionName = "1.1.0"
 
         resourceConfigurations += listOf("en")
 
